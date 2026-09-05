@@ -216,3 +216,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ttp working directories (keep dirs, ignore contents)
+ttp_input/*
+!ttp_input/.gitkeep
+ttp_output/*
+!ttp_output/.gitkeep
