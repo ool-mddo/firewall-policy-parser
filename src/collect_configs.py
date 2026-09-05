@@ -32,7 +32,7 @@ def _detect_node_name(text: str) -> Optional[str]:
 
 def detect_fw_configs(network: str, snapshot: str) -> Dict[str, str]:
     """configs dir を走査して FW コンフィグを検出する。{nodename: filepath} を返す。"""
-    scan_dir = os.path.join(MDDO_CONFIGS_DIR, network, snapshot)
+    scan_dir = os.path.join(MDDO_CONFIGS_DIR, network, snapshot, "configs")
     detected: Dict[str, str] = {}
 
     if not os.path.isdir(scan_dir):

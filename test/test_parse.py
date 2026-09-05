@@ -48,10 +48,10 @@ def test_detect_fw_config_negative():
 def test_node_pairs_validation(tmp_path, caplog):
     import logging
 
-    (tmp_path / "net1" / "snap1").mkdir(parents=True)
+    (tmp_path / "net1" / "snap1" / "configs").mkdir(parents=True)
     config_file = os.path.join(INPUTS_DIR, "site-a-fw-1.config.inheritance")
     import shutil
-    shutil.copy(config_file, tmp_path / "net1" / "snap1" / "site-a-fw-1.config.inheritance")
+    shutil.copy(config_file, tmp_path / "net1" / "snap1" / "configs" / "site-a-fw-1.config.inheritance")
 
     original_configs_dir = cc.MDDO_CONFIGS_DIR
     cc.MDDO_CONFIGS_DIR = str(tmp_path)
