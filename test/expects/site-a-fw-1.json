@@ -1,0 +1,95 @@
+[
+  [
+    {
+      "hostname": [
+        {
+          "hostname": "site-a-fw-1"
+        }
+      ],
+      "policies": [
+        {
+          "from_zone": "trust",
+          "to_zone": "trust",
+          "rules": [
+            {
+              "action": "permit",
+              "application": "any",
+              "destination_address": "any",
+              "source_address": "any",
+              "name": "default-permit"
+            }
+          ]
+        },
+        {
+          "from_zone": "trust",
+          "to_zone": "untrust",
+          "rules": [
+            {
+              "action": "permit",
+              "application": "any",
+              "destination_address": "any",
+              "source_address": "any",
+              "name": "default-permit"
+            }
+          ]
+        },
+        {
+          "from_zone": "WAN",
+          "to_zone": "LAN",
+          "rules": [
+            {
+              "action": "deny",
+              "application": "any",
+              "destination_address": "any",
+              "source_address": "any",
+              "name": "DEFAULT"
+            }
+          ]
+        },
+        {
+          "from_zone": "LAN",
+          "to_zone": "WAN",
+          "rules": [
+            {
+              "action": "permit",
+              "application": "any",
+              "destination_address": "any",
+              "source_address": "any",
+              "name": "DEFAULT"
+            }
+          ]
+        }
+      ],
+      "zones": [
+        {
+          "name": "trust"
+        },
+        {
+          "name": "untrust"
+        },
+        {
+          "name": "WAN",
+          "interfaces": [
+            {
+              "interface": "ge-0/0/1.0"
+            },
+            {
+              "interface": "ge-7/0/1.0"
+            }
+          ]
+        },
+        {
+          "name": "LAN",
+          "interfaces": [
+            {
+              "interface": "ge-0/0/2.0"
+            },
+            {
+              "interface": "ge-7/0/2.0"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+]
