@@ -18,7 +18,7 @@
 ## 機能要件
 
 ### FR-1: FW コンフィグの自動検出
-- `MDDO_CONFIGS_DIR/<network>/<snapshot>/` 以下の全ファイルを走査する
+- `MDDO_CONFIGS_DIR/<network>/<snapshot>/configs/` 以下を再帰的に走査する
 - ファイル内に以下パターンのコメントを含むファイルを FW コンフィグと判定する
   ```
   ## '<nodename>' was inherited from group 'node0'

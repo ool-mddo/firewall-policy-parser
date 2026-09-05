@@ -45,6 +45,7 @@ Body: { "node_pairs": [{"primary": "<node>", "secondary": "<node>"}] }
 - 毎回 `ttp_input/<network>/<snapshot>/` と `ttp_output/<network>/<snapshot>/` を初期化(全削除)してから処理する
 
 ## FW コンフィグの識別方法
+`MDDO_CONFIGS_DIR/<network>/<snapshot>/configs/` 以下を再帰的に走査し、
 JunOS inherited config に含まれる以下のコメントで判定する:
 ```
 ## '<nodename>' was inherited from group 'node0'
