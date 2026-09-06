@@ -67,6 +67,11 @@ firewall-policy-parser/
 │   ├── requirements.md
 │   ├── design-notes.md
 │   └── reviews/
+├── .github/
+│   └── workflows/
+│       ├── docker-build.yml    # push/tag でイメージビルド & GHCR プッシュ
+│       └── docker-cleanup.yml  # 古いイメージの定期削除
+├── Dockerfile
 └── CLAUDE.md
 ```
 
@@ -139,15 +144,26 @@ firewall-policy-parser/
 
 ## セットアップ
 
+### ローカル実行
+
 ```bash
 pip install -r requirements_prod.txt
 # 開発時
 pip install -r requirements_dev.txt
 ```
 
+### Docker イメージを使う
+
+GitHub Actions により、push/タグごとに自動ビルドされたイメージが
+[GHCR (GitHub Container Registry)](https://github.com/ool-mddo/firewall-policy-parser/pkgs/container/firewall-policy-parser) に公開される。
+
+```bash
+docker pull ghcr.io/ool-mddo/firewall-policy-parser:latest
+```
+
 ## 使い方
 
-### サーバー起動
+### サーバー起動 (ローカル)
 
 ```bash
 MDDO_CONFIGS_DIR=<configs-dir> \
@@ -193,8 +209,72 @@ curl -s -X POST \
   | python3 -m json.tool
 ```
 
+### コンテナで起動する
+
+configs ディレクトリをボリュームマウントして起動する:
+
+```bash
+docker run -p 5000:5000 \
+  -e MDDO_CONFIGS_DIR=/configs \
+  -v /path/to/configs:/configs:ro \
+  ghcr.io/ool-mddo/firewall-policy-parser:latest
+```
+
+出力 JSON を取り出したい場合は `ttp_output/` もマウントする:
+
+```bash
+docker run -p 5000:5000 \
+  -e MDDO_CONFIGS_DIR=/configs \
+  -e MDDO_FIREWALL_POLICY_PARSER_OUTPUTS_DIR=/output \
+  -v /path/to/configs:/configs:ro \
+  -v /path/to/output:/output \
+  ghcr.io/ool-mddo/firewall-policy-parser:latest
+```
+
+### コンテナでサンプルデータを動作確認する
+
+```bash
+# サンプルコンフィグを configs dir 形式に配置
+mkdir -p /tmp/testconfigs/net1/snap1/configs
+cp test/inputs/*.inheritance /tmp/testconfigs/net1/snap1/configs/
+
+# コンテナ起動
+docker run -p 5000:5000 \
+  -e MDDO_CONFIGS_DIR=/configs \
+  -v /tmp/testconfigs:/configs:ro \
+  ghcr.io/ool-mddo/firewall-policy-parser:latest
+
+# 別ターミナルでリクエスト
+curl -s -X POST \
+  http://localhost:5000/fw_policy/net1/snap1/parsed_result \
+  -H 'Content-Type: application/json' \
+  -d '{"node_pairs": [{"primary": "site-a-fw-1", "secondary": "site-a-fw-2"}]}' \
+  | python3 -m json.tool
+```
+
 ### テスト実行
 
 ```bash
 python3 -m pytest test/ -v
 ```
+
+## CI/CD
+
+GitHub Actions により以下が自動化されている。
+
+| ワークフロー | ファイル | トリガー |
+|---|---|---|
+| イメージビルド & プッシュ | `.github/workflows/docker-build.yml` | 全ブランチ push / タグ push |
+| 古いイメージ削除 | `.github/workflows/docker-cleanup.yml` | 毎週日曜0時 / ビルド完了後 / 手動 |
+
+ビルドワークフローはテストが成功した場合のみイメージをプッシュする。
+イメージは最新 10 件を保持し、semver タグ (`v1.0.0` 形式) は自動削除の対象外となる。
+
+**タグ付けルール**
+
+| 状況 | 付与されるタグ |
+|---|---|
+| 全 push | `sha-<7桁ハッシュ>` |
+| main への push | + `latest` |
+| ブランチ push | + `<branch-name>` |
+| タグ push (`v1.0.0`) | + `v1.0.0`, `1.0` |

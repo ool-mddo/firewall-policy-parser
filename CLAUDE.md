@@ -57,5 +57,16 @@ JunOS inherited config に含まれる以下のコメントで判定する:
 - コンフィグは存在するが node_pairs に未指定 → `logger.warning`
 - 両方に存在するノードのみ処理対象とする
 
+## コンテナ
+- イメージ: `ghcr.io/ool-mddo/firewall-policy-parser`
+- `MDDO_FIREWALL_POLICY_PARSER_DIR=/app` を固定済み (`ttp_input/`・`ttp_output/` は `/app` 以下に生成)
+- `MDDO_CONFIGS_DIR` は実行時に `-e` で渡す。configs ディレクトリはボリュームマウントで提供する
+- 出力 JSON を外部から取り出す場合は `MDDO_FIREWALL_POLICY_PARSER_OUTPUTS_DIR` を設定してマウント
+
+## CI/CD
+- `.github/workflows/docker-build.yml`: 全ブランチ push + `v*` タグ push でテスト → イメージビルド → GHCR プッシュ
+- `.github/workflows/docker-cleanup.yml`: 最新10件を保持して古いイメージを削除 (毎週日曜 / ビルド完了後 / 手動)
+- semver タグ (`v1.0.0` 形式) は自動削除の対象外
+
 ## 参考実装
 [bgp-policy-parser](https://github.com/ool-mddo/bgp-policy-parser) (同プロジェクトの BGP ポリシーパーサー)
