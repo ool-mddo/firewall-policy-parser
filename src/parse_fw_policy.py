@@ -45,6 +45,24 @@ def _build_output(node: str, pair: dict, ttp_result: List) -> dict:
     }
 
 
+def collect_node_fw_attributes(network: str, snapshot: str) -> List[dict]:
+    save_dir = os.path.join(OUTPUTS_DIR, network, snapshot)
+    if not os.path.isdir(save_dir):
+        return []
+
+    node_fw_attributes = []
+    for filename in sorted(os.listdir(save_dir)):
+        if not filename.endswith(".json"):
+            continue
+        node_name = filename[: -len(".json")]
+        filepath = os.path.join(save_dir, filename)
+        with open(filepath, "r", encoding="utf-8") as f:
+            fw_data = json.load(f)
+        node_fw_attributes.append({"node-id": node_name, "firewall": fw_data})
+
+    return node_fw_attributes
+
+
 def parse_fw_configs(network: str, snapshot: str, copy_targets: Dict) -> List[str]:
     parsed_nodes = []
 
