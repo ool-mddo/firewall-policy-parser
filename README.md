@@ -83,6 +83,7 @@ firewall-policy-parser/
 | `MDDO_FIREWALL_POLICY_PARSER_DIR` | `.` | 作業ディレクトリの基底パス |
 | `MDDO_FIREWALL_POLICY_PARSER_CONFIGS_DIR` | `${MDDO_FIREWALL_POLICY_PARSER_DIR}/ttp_input` | FW コンフィグのコピー先 |
 | `MDDO_FIREWALL_POLICY_PARSER_OUTPUTS_DIR` | `${MDDO_FIREWALL_POLICY_PARSER_DIR}/ttp_output` | TTP パース結果の保存先 |
+| `MODEL_CONDUCTOR_HOST` | `model-conductor:9292` | model-conductor の接続先 (`host:port` 形式) |
 
 `MDDO_FIREWALL_POLICY_PARSER_CONFIGS_DIR` / `MDDO_FIREWALL_POLICY_PARSER_OUTPUTS_DIR` を
 明示的に設定した場合はそちらが優先される。未設定の場合は `MDDO_FIREWALL_POLICY_PARSER_DIR`
@@ -141,6 +142,48 @@ firewall-policy-parser/
 | node_pairs に指定されているがコンフィグが見つからない | `ERROR` |
 | コンフィグは存在するが node_pairs に未指定 | `WARNING` |
 | 両方に存在する | 処理対象 |
+
+### `POST /fw_policy/<network>/<snapshot>/topology`
+
+`parsed_result` で保存された TTP パース結果を集約し、model-conductor に転送する。
+
+**前提**
+
+`parsed_result` が実行済みで `ttp_output/<network>/<snapshot>/` にデータが存在すること。
+
+**処理フロー**
+
+1. `ttp_output/<network>/<snapshot>/` の全 `*.json` を読み込む
+2. 以下の形式に集約する:
+   ```json
+   {
+     "node": [
+       {
+         "node-id": "site-a-fw-1",
+         "mddo-topology:l3-node-attributes": {
+           "firewall": { "node": "...", "policies": [...], "zones": [...], ... }
+         }
+       }
+     ]
+   }
+   ```
+3. `http://$MODEL_CONDUCTOR_HOST/conduct/<network>/<snapshot>/topology/layer3/policies` に POST する
+4. model-conductor のレスポンスをそのままクライアントに返す
+
+**Response**
+
+- `ttp_output` にファイルが存在しない場合: `404`
+- それ以外: model-conductor のステータスコードとレスポンス body をそのまま返す
+
+**リクエスト例**
+
+```bash
+curl -s -X POST \
+  http://localhost:5000/fw_policy/<network>/<snapshot>/topology \
+  | python3 -m json.tool
+```
+
+---
 
 ## セットアップ
 

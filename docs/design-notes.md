@@ -76,3 +76,23 @@ TTP はテンプレート行のインデント（スペース数）を入力行�
 ## 将来検討: address-book / applications の対応
 サンプルコンフィグには address-book や applications セクションが含まれないため
 初期スコープ外とする。実コンフィグで必要になった時点で TTPテンプレートを拡張する。
+
+## topology エンドポイントの設計
+
+### 2エンドポイント分離の理由
+パース（`parsed_result`）と集約・転送（`topology`）を独立したエンドポイントに分けている。
+これにより、パース結果を手動確認してから転送する、転送のみ再実行するといった運用が可能になる。
+
+### model-conductor との連携方式
+転送は同期 POST で行い、model-conductor のレスポンス（ステータスコード・body）をそのままクライアントに返す。
+エラーハンドリングを呼び出し元に委ねることで、このサービス側の実装をシンプルに保つ。
+
+### データ構造: `mddo-topology:l3-node-attributes` ラッパー
+model-conductor が期待するトポロジーデータモデルに合わせて、各ノードのデータを
+`mddo-topology:l3-node-attributes` キー配下に格納し、全ノードを `{"node": [...]}` でラップする。
+ttp_output に保存された JSON オブジェクト全体を `firewall` キーの値としてそのまま埋め込む。
+
+### `MODEL_CONDUCTOR_HOST` 環境変数
+model-conductor の接続先を `host:port` 形式で受け取る。
+デフォルト値 `model-conductor:9292` はコンテナ環境（Docker Compose 等）での
+サービス名解決を想定している。ローカル実行時は明示的に上書きする。

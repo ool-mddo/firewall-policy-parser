@@ -35,7 +35,7 @@ def post_topology(network: str, snapshot: str):
     app_logger.info("POST topology start: network=%s, snapshot=%s", network, snapshot)
 
     node_fw_attributes = pfp.collect_node_fw_attributes(network, snapshot)
-    if not node_fw_attributes:
+    if not node_fw_attributes["node"]:
         app_logger.info("POST topology end: network=%s, snapshot=%s, no parsed results found", network, snapshot)
         return jsonify({"error": "No parsed results found"}), 404
 

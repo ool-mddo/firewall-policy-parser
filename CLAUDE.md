@@ -11,12 +11,13 @@
 - 言語: Python
 - パースライブラリ: TTP (Template Text Parser)
 - API フレームワーク: Flask
+- HTTP クライアント: requests (model-conductor への転送)
 - 出力形式: JSON
 
 ## アーキテクチャ
 2ステージパイプライン:
 1. TTP パース: コンフィグファイル → TTP raw JSON (ttp_output)
-2. (将来) policy model 変換: TTP raw JSON → 正規化 policy model JSON
+2. topology 集約・転送: ttp_output → node-fw-attributes 集約 → model-conductor へ POST
 
 ## ディレクトリ構成
 ```
@@ -36,6 +37,7 @@ test/
 - `MDDO_FIREWALL_POLICY_PARSER_DIR`: パーサー作業ディレクトリ基底 (default: `.`)
 - `MDDO_FIREWALL_POLICY_PARSER_CONFIGS_DIR`: FWコンフィグコピー先 (default: `${MDDO_FIREWALL_POLICY_PARSER_DIR}/ttp_input`)
 - `MDDO_FIREWALL_POLICY_PARSER_OUTPUTS_DIR`: TTPパース結果保存先 (default: `${MDDO_FIREWALL_POLICY_PARSER_DIR}/ttp_output`)
+- `MODEL_CONDUCTOR_HOST`: model-conductor の接続先 `host:port` (default: `model-conductor:9292`)
 
 ## REST API
 ```
@@ -43,6 +45,18 @@ POST /fw_policy/<network>/<snapshot>/parsed_result
 Body: { "node_pairs": [{"primary": "<node>", "secondary": "<node>"}] }
 ```
 - 毎回 `ttp_input/<network>/<snapshot>/` と `ttp_output/<network>/<snapshot>/` を初期化(全削除)してから処理する
+
+```
+POST /fw_policy/<network>/<snapshot>/topology
+```
+- 前提: `parsed_result` が実行済みで `ttp_output/<network>/<snapshot>/` にデータがある
+- `ttp_output` を読み込み、以下の形式に集約して model-conductor に転送する:
+  ```json
+  {"node": [{"node-id": "ノード名", "mddo-topology:l3-node-attributes": {"firewall": <ttp_output内容>}}, ...]}
+  ```
+- 転送先: `http://$MODEL_CONDUCTOR_HOST/conduct/<network>/<snapshot>/topology/layer3/policies`
+- `ttp_output` にファイルが存在しない場合は 404 を返す
+- model-conductor のレスポンスをそのままクライアントに返す
 
 ## FW コンフィグの識別方法
 `MDDO_CONFIGS_DIR/<network>/<snapshot>/configs/` 以下を再帰的に走査し、

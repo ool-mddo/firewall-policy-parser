@@ -51,7 +51,7 @@
   - `ttp_output/<network>/<snapshot>/`
 - これにより前回の処理結果が混入しないことを保証する
 
-### FR-7: REST API
+### FR-7: REST API (パース)
 - 以下のエンドポイントで処理を受け付ける
   ```
   POST /fw_policy/<network>/<snapshot>/parsed_result
@@ -61,6 +61,27 @@
   { "node_pairs": [{"primary": "<node>", "secondary": "<node>"}] }
   ```
 - `network` と `snapshot` は URL path で指定する
+
+### FR-8: REST API (topology 集約・転送)
+- 以下のエンドポイントで処理を受け付ける
+  ```
+  POST /fw_policy/<network>/<snapshot>/topology
+  ```
+- 前提: FR-7 (`parsed_result`) が実行済みで `ttp_output/<network>/<snapshot>/` にデータが存在する
+- `ttp_output/<network>/<snapshot>/` の全 `*.json` を読み込み、以下の形式に集約する:
+  ```json
+  {
+    "node": [
+      {
+        "node-id": "<ノード名>",
+        "mddo-topology:l3-node-attributes": { "firewall": <ttp_output の JSON オブジェクト> }
+      }
+    ]
+  }
+  ```
+- 集約データを `http://$MODEL_CONDUCTOR_HOST/conduct/<network>/<snapshot>/topology/layer3/policies` に POST する
+- `ttp_output` にファイルが存在しない場合は 404 を返す
+- model-conductor のレスポンス（ステータスコード・body）をそのままクライアントに返す
 
 ---
 
@@ -75,6 +96,7 @@
 | `MDDO_FIREWALL_POLICY_PARSER_DIR` | 作業ディレクトリ基底 | `.` |
 | `MDDO_FIREWALL_POLICY_PARSER_CONFIGS_DIR` | FWコンフィグコピー先 | `${MDDO_FIREWALL_POLICY_PARSER_DIR}/ttp_input` |
 | `MDDO_FIREWALL_POLICY_PARSER_OUTPUTS_DIR` | TTPパース結果保存先 | `${MDDO_FIREWALL_POLICY_PARSER_DIR}/ttp_output` |
+| `MODEL_CONDUCTOR_HOST` | model-conductor 接続先 (`host:port`) | `model-conductor:9292` |
 
 `MDDO_FIREWALL_POLICY_PARSER_CONFIGS_DIR` / `MDDO_FIREWALL_POLICY_PARSER_OUTPUTS_DIR` が
 明示的に設定された場合はそちらを優先し、未設定の場合は
@@ -91,5 +113,4 @@
 - `security > address-book` の抽出
 - `security > applications` の抽出
 - NAT ポリシーの抽出
-- TTP raw JSON から正規化 policy model への変換 (第2ステージ)
 - Juniper SRX 以外の機器への対応
