@@ -12,7 +12,10 @@
 ```json
 {
   "node": "site-a-fw-1",
-  "pair": { "primary": "site-a-fw-1", "secondary": "site-a-fw-2" },
+  "pair": {
+    "primary": { "name": "site-a-fw-1", "atypical_interfaces": [...] },
+    "secondary": { "name": "site-a-fw-2", "atypical_interfaces": [...] }
+  },
   "policies": [
     {
       "from_zone": "trust",

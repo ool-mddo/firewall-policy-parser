@@ -42,7 +42,7 @@ test/
 ## REST API
 ```
 POST /fw_policy/<network>/<snapshot>/parsed_result
-Body: { "node_pairs": [{"primary": "<node>", "secondary": "<node>"}] }
+Body: { "cluster_firewall_pairs": [{"primary": {"name": "<node>", "atypical_interfaces": [...]}, "secondary": {"name": "<node>", "atypical_interfaces": [...]}}] }
 ```
 - 毎回 `ttp_input/<network>/<snapshot>/` と `ttp_output/<network>/<snapshot>/` を初期化(全削除)してから処理する
 
@@ -66,9 +66,9 @@ JunOS inherited config に含まれる以下のコメントで判定する:
 ## '<nodename>' was inherited from group 'node1'
 ```
 
-## node_pairs との照合ルール
-- node_pairs に指定されているがコンフィグが見つからない → `logger.error`
-- コンフィグは存在するが node_pairs に未指定 → `logger.warning`
+## cluster_firewall_pairs との照合ルール
+- cluster_firewall_pairs に指定されているがコンフィグが見つからない → `logger.error`
+- コンフィグは存在するが cluster_firewall_pairs に未指定 → `logger.warning`
 - 両方に存在するノードのみ処理対象とする
 
 ## コンテナ

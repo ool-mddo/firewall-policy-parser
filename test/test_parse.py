@@ -45,7 +45,7 @@ def test_detect_fw_config_negative():
     assert cc._detect_node_name(non_fw_text) is None
 
 
-def test_node_pairs_validation(tmp_path, caplog):
+def test_cluster_firewall_pairs_validation(tmp_path, caplog):
     import logging
 
     (tmp_path / "net1" / "snap1" / "configs").mkdir(parents=True)
@@ -57,7 +57,7 @@ def test_node_pairs_validation(tmp_path, caplog):
     cc.MDDO_CONFIGS_DIR = str(tmp_path)
 
     node_pairs = [
-        {"primary": "site-a-fw-1", "secondary": "site-a-fw-2"},
+        {"primary": {"name": "site-a-fw-1"}, "secondary": {"name": "site-a-fw-2"}},
     ]
 
     with caplog.at_level(logging.ERROR, logger="collect_configs"):

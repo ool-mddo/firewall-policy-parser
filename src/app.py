@@ -20,7 +20,7 @@ def post_parsed_result(network: str, snapshot: str):
     app_logger.info("POST parsed_result start: network=%s, snapshot=%s", network, snapshot)
 
     body = request.get_json(silent=True) or {}
-    node_pairs = body.get("node_pairs", [])
+    node_pairs = body.get("cluster_firewall_pairs", [])
 
     cc.cleanup_snapshot_dir(network, snapshot)
     copy_targets = cc.collect_configs(network, snapshot, node_pairs)

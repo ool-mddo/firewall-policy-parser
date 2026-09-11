@@ -61,6 +61,7 @@ def collect_node_fw_attributes(network: str, snapshot: str) -> dict:
         nodes.append({
             "node-id": node_name,
             "mddo-topology:l3-node-attributes": {"firewall": fw_data},
+            "flag": ["firewall"],
         })
 
     return {"node": nodes}

@@ -26,10 +26,10 @@
   ```
 - 判定したファイルからノード名を抽出する
 
-### FR-2: node_pairs との照合
-- REST リクエスト body で受け取った `node_pairs` と、検出されたコンフィグを照合する
-- node_pairs に指定されているがコンフィグが見つからない場合: `logger.error` を出力する
-- コンフィグは存在するが node_pairs に未指定の場合: `logger.warning` を出力する
+### FR-2: cluster_firewall_pairs との照合
+- REST リクエスト body で受け取った `firewall.cluster_firewall_pairs` と、検出されたコンフィグを照合する
+- cluster_firewall_pairs に指定されているがコンフィグが見つからない場合: `logger.error` を出力する
+- コンフィグは存在するが cluster_firewall_pairs に未指定の場合: `logger.warning` を出力する
 - 両方に存在するノードのみを処理対象とする
 
 ### FR-3: FW コンフィグのコピー
@@ -43,7 +43,7 @@
 
 ### FR-5: パース結果の保存
 - パース結果をノードごとに JSON ファイルとして `ttp_output/<network>/<snapshot>/` に保存する
-- JSON にはノード名とペア情報 (node_pairs から取得) を含める
+- JSON にはノード名とペア情報 (cluster_firewall_pairs から取得) を含める
 
 ### FR-6: 作業ディレクトリの初期化
 - REST リクエストを受け取るたびに、以下を全削除してから処理を開始する
@@ -58,7 +58,14 @@
   ```
 - Request body:
   ```json
-  { "node_pairs": [{"primary": "<node>", "secondary": "<node>"}] }
+  {
+    "cluster_firewall_pairs": [
+      {
+        "primary": { "name": "<node>", "atypical_interfaces": [...] },
+        "secondary": { "name": "<node>", "atypical_interfaces": [...] }
+      }
+    ]
+  }
   ```
 - `network` と `snapshot` は URL path で指定する
 

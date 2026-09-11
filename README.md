@@ -103,20 +103,34 @@ firewall-policy-parser/
 
 ```json
 {
-  "node_pairs": [
-    { "primary": "<node-name>", "secondary": "<node-name>" }
+  "cluster_firewall_pairs": [
+    {
+      "primary": {
+        "name": "<node-name>",
+        "atypical_interfaces": [
+          { "name": "<intf>", "role": "<fabric|control>", "fabric_options": { "member_interfaces": ["<intf>"] } }
+        ]
+      },
+      "secondary": {
+        "name": "<node-name>",
+        "atypical_interfaces": [
+          { "name": "<intf>", "role": "<fabric|control>", "fabric_options": { "member_interfaces": ["<intf>"] } }
+        ]
+      }
+    }
   ]
 }
 ```
 
-`node_pairs` は SRX cluster のペア情報。コンフィグファイルからは判断できないため
-呼び出し元が明示的に指定する。
+`cluster_firewall_pairs` は SRX cluster のペア情報。コンフィグファイルからは判断できないため
+呼び出し元が明示的に指定する。`atypical_interfaces` には fabric/control などクラスタ固有の
+インタフェース情報を含める。
 
 **処理フロー**
 
 1. `ttp_input/<network>/<snapshot>/` と `ttp_output/<network>/<snapshot>/` を初期化（全削除）
 2. `MDDO_CONFIGS_DIR/<network>/<snapshot>/configs/` を再帰的に走査し FW コンフィグを検出
-3. `node_pairs` と照合（不一致は error / warning ログに出力）
+3. `cluster_firewall_pairs` と照合（不一致は error / warning ログに出力）
 4. 一致したファイルを `ttp_input/` にコピーし TTP でパース
 5. パース結果を `ttp_output/<network>/<snapshot>/<node>.json` に保存
 
@@ -135,12 +149,12 @@ firewall-policy-parser/
 ## '<nodename>' was inherited from group 'node1'
 ```
 
-**node_pairs 照合ルール**
+**cluster_firewall_pairs 照合ルール**
 
 | 状況 | ログ |
 |---|---|
-| node_pairs に指定されているがコンフィグが見つからない | `ERROR` |
-| コンフィグは存在するが node_pairs に未指定 | `WARNING` |
+| cluster_firewall_pairs に指定されているがコンフィグが見つからない | `ERROR` |
+| コンフィグは存在するが cluster_firewall_pairs に未指定 | `WARNING` |
 | 両方に存在する | 処理対象 |
 
 ### `POST /fw_policy/<network>/<snapshot>/topology`
@@ -222,7 +236,7 @@ python3 src/app.py
 curl -s -X POST \
   http://localhost:5000/fw_policy/<network>/<snapshot>/parsed_result \
   -H 'Content-Type: application/json' \
-  -d '{"node_pairs": [{"primary": "site-a-fw-1", "secondary": "site-a-fw-2"}]}' \
+  -d '{"cluster_firewall_pairs": [{"primary": {"name": "site-a-fw-1"}, "secondary": {"name": "site-a-fw-2"}}]}' \
   | python3 -m json.tool
 ```
 
@@ -248,7 +262,7 @@ python3 src/app.py
 curl -s -X POST \
   http://localhost:5000/fw_policy/net1/snap1/parsed_result \
   -H 'Content-Type: application/json' \
-  -d '{"node_pairs": [{"primary": "site-a-fw-1", "secondary": "site-a-fw-2"}]}' \
+  -d '{"cluster_firewall_pairs": [{"primary": {"name": "site-a-fw-1"}, "secondary": {"name": "site-a-fw-2"}}]}' \
   | python3 -m json.tool
 ```
 
@@ -291,7 +305,7 @@ docker run -p 5000:5000 \
 curl -s -X POST \
   http://localhost:5000/fw_policy/net1/snap1/parsed_result \
   -H 'Content-Type: application/json' \
-  -d '{"node_pairs": [{"primary": "site-a-fw-1", "secondary": "site-a-fw-2"}]}' \
+  -d '{"cluster_firewall_pairs": [{"primary": {"name": "site-a-fw-1"}, "secondary": {"name": "site-a-fw-2"}}]}' \
   | python3 -m json.tool
 ```
 

@@ -73,20 +73,20 @@ def collect_configs(network: str, snapshot: str, node_pairs: List[Dict]) -> Dict
     pair_nodes: Dict[str, Dict] = {}
     for pair in node_pairs:
         for role in ("primary", "secondary"):
-            node = pair.get(role)
+            node = pair.get(role, {}).get("name")
             if node:
                 pair_nodes[node] = pair
 
     for node in pair_nodes:
         if node not in detected:
             logger.error(
-                f"node '{node}' is specified in node_pairs but config not found"
+                f"node '{node}' is specified in cluster_firewall_pairs but config not found"
             )
 
     for node in detected:
         if node not in pair_nodes:
             logger.warning(
-                f"config found for '{node}' but not specified in node_pairs"
+                f"config found for '{node}' but not specified in cluster_firewall_pairs"
             )
 
     copy_targets: Dict = {}
