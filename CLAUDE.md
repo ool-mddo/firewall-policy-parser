@@ -52,11 +52,24 @@ POST /fw_policy/<network>/<snapshot>/topology
 - 前提: `parsed_result` が実行済みで `ttp_output/<network>/<snapshot>/` にデータがある
 - `ttp_output` を読み込み、以下の形式に集約して model-conductor に転送する:
   ```json
-  {"node": [{"node-id": "ノード名", "mddo-topology:l3-node-attributes": {"firewall": <ttp_output内容>}}, ...]}
+  {
+    "node": [
+      {
+        "node-id": "ノード名",
+        "mddo-topology:l3-node-attributes": {"firewall": <ttp_output内容>},
+        "flag": ["firewall"]
+      },
+      ...
+    ]
+  }
   ```
+  `"flag": ["firewall"]` は netomox-exp が名前空間変換テーブル生成時に FW ノードを識別するために必要
 - 転送先: `http://$MODEL_CONDUCTOR_HOST/conduct/<network>/<snapshot>/topology/layer3/policies`
 - `ttp_output` にファイルが存在しない場合は 404 を返す
 - model-conductor のレスポンスをそのままクライアントに返す
+
+> **スキーマの canonical definition**: `playground/docs/firewall_node_attributes.md` を参照。
+> 出力 JSON のキー名 (`zones`, `policies`, `from_zone`, `rules` 等) はすべて snake_case + 複数形。
 
 ## FW コンフィグの識別方法
 `MDDO_CONFIGS_DIR/<network>/<snapshot>/configs/` 以下を再帰的に走査し、

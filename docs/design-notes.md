@@ -95,6 +95,25 @@ model-conductor が期待するトポロジーデータモデルに合わせて�
 `mddo-topology:l3-node-attributes` キー配下に格納し、全ノードを `{"node": [...]}` でラップする。
 ttp_output に保存された JSON オブジェクト全体を `firewall` キーの値としてそのまま埋め込む。
 
+さらに、`"flag": ["firewall"]` フィールドを各ノードのトップレベルに追加する。
+このフィールドは netomox-exp が名前空間変換テーブル (`ns_convert_table.json`) を生成する際の
+FW ノード判定 (`firewall_node?`) に使用される。
+
+```json
+{
+  "node": [
+    {
+      "node-id": "site-a-fw-1",
+      "mddo-topology:l3-node-attributes": { "firewall": { ... } },
+      "flag": ["firewall"]
+    }
+  ]
+}
+```
+
+> **スキーマの canonical definition**: `playground/docs/firewall_node_attributes.md` を参照。
+> 出力 JSON キー名は同ドキュメントの「キー命名規則」に従うこと。
+
 ### `MODEL_CONDUCTOR_HOST` 環境変数
 model-conductor の接続先を `host:port` 形式で受け取る。
 デフォルト値 `model-conductor:9292` はコンテナ環境（Docker Compose 等）での
