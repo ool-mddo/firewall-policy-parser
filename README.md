@@ -22,10 +22,18 @@ Juniper SRX のコンフィグファイルから Firewall policy 情報を抽出
 
 ## 出力 JSON 構造
 
+per-node JSON (`ttp_output/<network>/<snapshot>/<node>.json`):
+
 ```json
 {
   "node": "site-a-fw-1",
-  "pair": { "primary": "site-a-fw-1", "secondary": "site-a-fw-2" },
+  "pair": {
+    "primary":   { "name": "site-a-fw-1", "atypical_interfaces": [
+      { "name": "ae0",      "role": "fabric",  "fabric_options": { "member_interfaces": ["ge-0/0/0"] } },
+      { "name": "ge-0/0/1", "role": "control" }
+    ]},
+    "secondary": { "name": "site-a-fw-2", "atypical_interfaces": [ ... ] }
+  },
   "policies": [
     {
       "from_zone": "trust",
@@ -175,12 +183,14 @@ firewall-policy-parser/
        {
          "node-id": "site-a-fw-1",
          "mddo-topology:l3-node-attributes": {
-           "firewall": { "node": "...", "policies": [...], "zones": [...], ... }
-         }
+           "firewall": { "node": "...", "pair": {...}, "zones": [...], "policies": [...] }
+         },
+         "flag": ["firewall"]
        }
      ]
    }
    ```
+   `"flag": ["firewall"]` は netomox-exp の名前空間変換テーブル生成時の FW ノード識別に使用される。
 3. `http://$MODEL_CONDUCTOR_HOST/conduct/<network>/<snapshot>/topology/layer3/policies` に POST する
 4. model-conductor のレスポンスをそのままクライアントに返す
 
