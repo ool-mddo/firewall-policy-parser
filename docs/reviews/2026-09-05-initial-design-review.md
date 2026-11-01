@@ -29,7 +29,7 @@
 
 ### F-1: 複数の source-address / application が欠落する【危険な仮定・重大】
 
-**Status**: Open
+**Status**: Resolved (parser v0.2.0 / netomox 0.15 対応。リスト 3 形式に対応し、常に配列で出力。テスト追加済み。F-13 も同時に対応。`inactive: policy` は無効ポリシーとして除外する。ゾーン外の `global { policy ... }` は未対応で、直前の from-zone に合流する既知の制約)
 
 **場所**: `src/template/juniper_srx.ttp:9-11`
 
@@ -69,7 +69,7 @@ TTP はインデントを含む行全体でマッチングを行うため、
 
 ### F-3: `{{ action }};` の過剰マッチリスク【危険な仮定・中】
 
-**Status**: Open
+**Status**: Partially resolved (parser v0.2.0。`permit|deny|reject` を含む行のみ `action` にマッチさせ、`log;` `count;` `];` による上書きは解消。`then { log; permit; }` のような複合アクションのリスト化は未対応)
 
 **場所**: `src/template/juniper_srx.ttp:12`
 
@@ -235,7 +235,7 @@ node_pairs に存在しないノードや、コンフィグが見つからない
 
 ### F-13: 複数の source-address を含むコンフィグのテストがない【テスト不足】
 
-**Status**: Open
+**Status**: Resolved (parser v0.2.0。`test_ttp_parse_multiple_*` を追加)
 
 **場所**: `test/test_parse.py`
 

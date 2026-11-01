@@ -23,9 +23,9 @@
       "rules": [
         {
           "name": "default-permit",
-          "source_address": "any",
-          "destination_address": "any",
-          "application": "any",
+          "source_address": ["any"],
+          "destination_address": ["any"],
+          "application": ["any"],
           "action": "permit"
         }
       ]
@@ -38,9 +38,29 @@
 }
 ```
 
-**現状の制約**: `source_address` / `destination_address` / `application` はスカラー値。
-同一 match ブロックに複数行ある場合は最後の値だけが残り、それ以前は無音で上書きされる
-(レビュー F-1 参照)。将来的にはリスト型への変更が必要。
+**複数値の扱い (parser v0.2.0〜 / netomox 0.15 対応)**: `source_address` / `destination_address` / `application` は常に文字列の配列。
+次の 3 形式をすべて同じ配列に正規化する (レビュー F-1 の対応)。
+
+- 同一 match 内の複数行: `application a;` `application b;`
+- 1 行のリスト: `application [ a b c ];`
+- 複数行のリスト: `application [` (1 行 1 要素) `];`
+
+実装は `ttp_parse()` 内の 2 段階。リスト記法は事前に `key a;` の複数行へ展開し (`_expand_bracket_lists`)、
+テンプレート側は各キーを `*` 付きサブグループで収集し、最後に `[{"value": "a"}]` を `["a"]` へ平坦化する (`_flatten_rule_lists`)。
+キーが無い場合は `[]`。`action` は `permit|deny|reject` を含む行のみにマッチさせる
+(リスト終端の `];` などが `action` に誤マッチして値が壊れるのを防ぐ)。
+address-book / address-set / application-set は未対応で、名前は文字列のまま配列に入る (解決しない)。
+
+`inactive: policy NAME { ... }` は無効化されたポリシーなので、前処理 (`_remove_inactive_policies`) でブロックごと除外する
+(除外しないと直前のポリシーに合流し、値が蓄積して `action` まで反転する)。
+
+**既知の制約** (未対応):
+- ゾーンペア外の `global { policy ... }` は直前の from-zone の rules に合流する。
+- `then { permit { application-services ... } }` のようにブロック形式の action は `action` キーが欠落する
+  (netomox 側で `''` になり、`vsrx_cluster.j2` は `then { ; }` を出力する)。
+- リストの行末コメント (`application [ a b ]; ## comment`) は要素が欠ける。引用符付きで空白を含む名前 (`[ "a b" ]`) は分割される。
+- マッチ条件の各値が 1 つも取れなかった場合は `[]` になる (インデントがテンプレートとずれた場合など)。
+  `[]` は `controller.yaml` の検証タスクでエラーにする。
 
 ## FW コンフィグ検出の設計判断
 bgp-policy-parser は node_props.csv (外部クエリ結果) でノード種別を判定しているが、

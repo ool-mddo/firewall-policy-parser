@@ -6,10 +6,16 @@
         from-zone {{ from_zone }} to-zone {{ to_zone | _start_ }} {
             <group name="rules*">
             policy {{ name | _start_ }} {
-                    source-address {{ source_address }};
-                    destination-address {{ destination_address }};
-                    application {{ application }};
-                    {{ action }};
+                    <group name="source_address*" method="table">
+                    source-address {{ value }};
+                    </group>
+                    <group name="destination_address*" method="table">
+                    destination-address {{ value }};
+                    </group>
+                    <group name="application*" method="table">
+                    application {{ value }};
+                    </group>
+                    {{ action | contains("permit", "deny", "reject") }};
             }
             </group>
         }

@@ -13,9 +13,9 @@
           "rules": [
             {
               "action": "permit",
-              "application": "any",
-              "destination_address": "any",
-              "source_address": "any",
+              "application": ["any"],
+              "destination_address": ["any"],
+              "source_address": ["any"],
               "name": "default-permit"
             }
           ]
@@ -26,9 +26,9 @@
           "rules": [
             {
               "action": "permit",
-              "application": "any",
-              "destination_address": "any",
-              "source_address": "any",
+              "application": ["any"],
+              "destination_address": ["any"],
+              "source_address": ["any"],
               "name": "default-permit"
             }
           ]
@@ -39,9 +39,9 @@
           "rules": [
             {
               "action": "deny",
-              "application": "any",
-              "destination_address": "any",
-              "source_address": "any",
+              "application": ["any"],
+              "destination_address": ["any"],
+              "source_address": ["any"],
               "name": "DEFAULT"
             }
           ]
@@ -52,9 +52,9 @@
           "rules": [
             {
               "action": "permit",
-              "application": "any",
-              "destination_address": "any",
-              "source_address": "any",
+              "application": ["any"],
+              "destination_address": ["any"],
+              "source_address": ["any"],
               "name": "DEFAULT"
             }
           ]
