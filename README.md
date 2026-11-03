@@ -41,9 +41,9 @@ per-node JSON (`ttp_output/<network>/<snapshot>/<node>.json`):
       "rules": [
         {
           "name": "default-permit",
-          "source_address": "any",
-          "destination_address": "any",
-          "application": "any",
+          "source_address": ["any"],
+          "destination_address": ["any"],
+          "application": ["any"],
           "action": "permit"
         }
       ]

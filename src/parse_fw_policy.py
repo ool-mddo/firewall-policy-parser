@@ -1,5 +1,6 @@
 import json
 import os
+import re
 from logging import getLogger
 from typing import Dict, List
 
@@ -17,10 +18,61 @@ OUTPUTS_DIR = os.environ.get(
 )
 
 
+# match conditions that can take multiple values: `application [ a b ];` / `application a; application b;`
+_LIST_KEYS = ["source_address", "destination_address", "application"]
+_BRACKET_LIST_PATTERN = re.compile(
+    r"^([ \t]*)(source-address|destination-address|application)[ \t]*\[([^\]]*)\][ \t]*;", re.MULTILINE
+)
+
+
+_INACTIVE_POLICY_PATTERN = re.compile(r"^[ \t]*inactive:[ \t]*policy[ \t]+\S+[ \t]*\{")
+
+
+def _remove_inactive_policies(text: str) -> str:
+    """Remove `inactive: policy NAME { ... }` blocks (deactivated policies are not effective).
+
+    Without removing them, the block is merged into the previous policy (the template cannot start a rule at it).
+    """
+    lines = text.splitlines(keepends=True)
+    result = []
+    depth = 0  # brace depth in an inactive policy block (0: out of the block)
+    for line in lines:
+        if depth == 0 and _INACTIVE_POLICY_PATTERN.match(line):
+            depth = line.count("{") - line.count("}")
+            continue
+        if depth > 0:
+            depth += line.count("{") - line.count("}")
+            continue
+        result.append(line)
+    return "".join(result)
+
+
+def _expand_bracket_lists(text: str) -> str:
+    """Expand `key [ a b c ];` (single/multi-line) to `key a;` lines (the template collects them as a list)"""
+
+    def expand(match: re.Match) -> str:
+        indent, key, values = match.groups()
+        return "\n".join(f"{indent}{key} {value};" for value in values.split())
+
+    return _BRACKET_LIST_PATTERN.sub(expand, text)
+
+
+def _flatten_rule_lists(ttp_result: List) -> None:
+    """Convert [{"value": "a"}, ...] of each list key in rules to ["a", ...] (missing key -> [])"""
+    for per_input in ttp_result:
+        for result in per_input:
+            for policy in result.get("policies", []):
+                for rule in policy.get("rules", []):
+                    for key in _LIST_KEYS:
+                        rule[key] = [item["value"] for item in rule.get(key, [])]
+
+
 def ttp_parse(text: str) -> List:
-    parser = ttp(text, TTP_TEMPLATE)
+    parser = ttp(_expand_bracket_lists(_remove_inactive_policies(text)), TTP_TEMPLATE)
     parser.parse()
-    return parser.result()
+    result = parser.result()
+    _flatten_rule_lists(result)
+    return result
 
 
 def _normalize_zone(zone_raw: dict) -> dict:
